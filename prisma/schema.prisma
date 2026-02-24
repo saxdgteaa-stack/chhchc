@@ -1,0 +1,340 @@
+// Church Management System - Prisma Schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ==================== USER & AUTHENTICATION ====================
+
+enum UserRole {
+  SUPER_PASTOR
+  PASTOR
+  USHER
+  ACCOUNTANT
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  phone        String?
+  name         String
+  password     String
+  role         UserRole @default(PASTOR)
+  isActive     Boolean  @default(true)
+  lastLogin    DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relations
+  sentMessages  Message[]
+  auditLogs     AuditLog[]
+  expenses      Expense[]
+  offerings     Offering[]  @relation("RecordedOfferings")
+  eventAssignments EventUsher[]
+
+  @@map("users")
+}
+
+// ==================== CHURCH INFO ====================
+
+model ChurchInfo {
+  id          String @id @default(cuid())
+  name        String
+  tagline     String?
+  address     String?
+  phone       String?
+  email       String?
+  website     String?
+  paybillNumber String?
+  accountNumber String?
+  bankName     String?
+  aboutText    String?
+  missionVision String?
+  serviceTimes String? // JSON string for multiple services
+  socialLinks  String? // JSON string for social media links
+  logoUrl      String?
+  bannerUrl    String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("church_info")
+}
+
+// ==================== MEMBERS & GROUPS ====================
+
+model Group {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  color       String?  // For UI display
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  members     Member[]
+  messages    Message[]
+
+  @@map("groups")
+}
+
+model Member {
+  id           String      @id @default(cuid())
+  firstName    String
+  lastName     String
+  email        String?
+  phone        String?
+  address      String?
+  dateOfBirth  DateTime?
+  gender       String?
+  occupation   String?
+  joinDate     DateTime    @default(now())
+  status       MemberStatus @default(VISITOR)
+  notes        String?
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  // Relations
+  groupId      String?
+  group        Group?      @relation(fields: [groupId], references: [id])
+  attendance   Attendance[]
+  offerings    Offering[]  @relation("MemberOfferings")
+
+  @@map("members")
+}
+
+enum MemberStatus {
+  ACTIVE
+  VISITOR
+  INACTIVE
+  TRANSFERRED
+}
+
+// ==================== EVENTS & SERVICES ====================
+
+model Event {
+  id                 String      @id @default(cuid())
+  title              String
+  description        String?
+  date               DateTime
+  endTime            DateTime?
+  location           String?
+  bannerUrl          String?
+  isPublic           Boolean     @default(false)
+  isInternal         Boolean     @default(true)
+  enableAttendance   Boolean     @default(true)
+  enableOfferings    Boolean     @default(false)
+  status             EventStatus @default(SCHEDULED)
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @updatedAt
+
+  // Relations
+  attendance         Attendance[]
+  offerings          Offering[]
+  assignedUshers     EventUsher[]
+  messages           Message[]
+
+  @@map("events")
+}
+
+enum EventStatus {
+  SCHEDULED
+  ONGOING
+  COMPLETED
+  CANCELLED
+}
+
+model EventUsher {
+  id        String   @id @default(cuid())
+  eventId   String
+  userId    String
+  assignedAt DateTime @default(now())
+
+  // Relations
+  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, userId])
+  @@map("event_ushers")
+}
+
+// ==================== ATTENDANCE ====================
+
+model Attendance {
+  id           String     @id @default(cuid())
+  memberId     String?
+  eventId      String
+  isPresent    Boolean    @default(false)
+  visitorName  String?
+  visitorPhone String?
+  visitorEmail String?
+  markedAt     DateTime   @default(now())
+  notes        String?
+
+  // Relations
+  member       Member?    @relation(fields: [memberId], references: [id])
+  event        Event      @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@map("attendance")
+}
+
+// ==================== FINANCE ====================
+
+model Offering {
+  id              String        @id @default(cuid())
+  amount          Float
+  method          PaymentMethod
+  transactionCode String?
+  accountId       String?       // Paybill account reference
+  payerPhone      String?
+  payerName       String?
+  eventId         String?
+  recordedBy      String
+  verified        Boolean       @default(false)
+  notes           String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  // Relations
+  event           Event?        @relation(fields: [eventId], references: [id])
+  member          Member?       @relation("MemberOfferings", fields: [memberId], references: [id])
+  memberId        String?
+  recorder        User          @relation("RecordedOfferings", fields: [recordedBy], references: [id])
+
+  @@map("offerings")
+}
+
+enum PaymentMethod {
+  CASH
+  PAYBILL
+  BANK_TRANSFER
+  CHEQUE
+}
+
+model Expense {
+  id           String   @id @default(cuid())
+  description  String
+  amount       Float
+  category     String
+  receiptUrl   String?
+  date         DateTime @default(now())
+  recordedBy   String
+  approvedBy   String?
+  status       ExpenseStatus @default(PENDING)
+  notes        String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relations
+  recorder     User     @relation(fields: [recordedBy], references: [id])
+
+  @@map("expenses")
+}
+
+enum ExpenseStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model PaybillTransaction {
+  id              String   @id @default(cuid())
+  transactionCode String   @unique
+  amount          Float
+  payerPhone      String
+  payerName       String?
+  accountRef      String?
+  status          String
+  processed       Boolean  @default(false)
+  rawPayload      String   // JSON string of webhook payload
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("paybill_transactions")
+}
+
+// ==================== MESSAGING ====================
+
+model Message {
+  id           String      @id @default(cuid())
+  content      String
+  recipientType RecipientType
+  groupId      String?
+  eventId      String?
+  sentBy       String
+  sentAt       DateTime    @default(now())
+  status       MessageStatus @default(PENDING)
+  recipientCount Int       @default(0)
+  cost         Float?
+  notes        String?
+
+  // Relations
+  group        Group?      @relation(fields: [groupId], references: [id])
+  event        Event?      @relation(fields: [eventId], references: [id])
+  sender       User        @relation(fields: [sentBy], references: [id])
+
+  @@map("messages")
+}
+
+enum RecipientType {
+  GROUP
+  EVENT_ATTENDEES
+  ALL_MEMBERS
+  CUSTOM
+}
+
+enum MessageStatus {
+  PENDING
+  SENT
+  FAILED
+  PARTIAL
+}
+
+model MessageTemplate {
+  id          String   @id @default(cuid())
+  name        String
+  content     String
+  type        String   // thank_you, welcome, announcement, etc.
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("message_templates")
+}
+
+// ==================== AUDIT & LOGS ====================
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  userId      String?
+  action      String
+  entityType  String
+  entityId    String?
+  oldValues   String?  // JSON string
+  newValues   String?  // JSON string
+  ipAddress   String?
+  userAgent   String?
+  createdAt   DateTime @default(now())
+
+  // Relations
+  user        User?    @relation(fields: [userId], references: [id])
+
+  @@map("audit_logs")
+}
+
+// ==================== SYSTEM SETTINGS ====================
+
+model SystemSetting {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  value       String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("system_settings")
+}
