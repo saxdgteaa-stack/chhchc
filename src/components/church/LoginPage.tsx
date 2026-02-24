@@ -1,31 +1,38 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Church, LogIn, Loader2, Eye, EyeOff } from 'lucide-react';
-import { useAuthStore } from '@/store/auth';
-import { mockUsers } from '@/lib/mock/data';
-import { useRouter } from 'next/navigation';
+import { useState } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Church, LogIn, Loader2, Eye, EyeOff } from "lucide-react";
+import { useAuthStore } from "@/store/auth";
+import { mockUsers } from "@/lib/mock/data";
+import { useRouter } from "next/navigation";
 
 interface LoginPageProps {
   onSwitchToPublic: () => void;
 }
 
 export function LoginPage({ onSwitchToPublic }: LoginPageProps) {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const login = useAuthStore((state) => state.login);
   const router = useRouter();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    setError("");
     setLoading(true);
 
     // Simulate API call
@@ -34,21 +41,25 @@ export function LoginPage({ onSwitchToPublic }: LoginPageProps) {
     // Find user by email (mock authentication)
     const user = mockUsers.find((u) => u.email === email);
 
-    if (user && password === 'admin123') {
+    if (user && password === "admin123") {
       login(user);
-      router.push('/?view=dashboard');
+      window.location.href = "/";
     } else {
-      setError('Invalid email or password. Try: admin@church.com / admin123');
+      setError("Invalid email or password. Try: admin@church.com / admin123");
     }
 
     setLoading(false);
   };
 
   const demoAccounts = [
-    { email: 'admin@church.com', role: 'Super Pastor', color: 'bg-purple-500' },
-    { email: 'pastor@church.com', role: 'Pastor', color: 'bg-blue-500' },
-    { email: 'usher@church.com', role: 'Usher', color: 'bg-green-500' },
-    { email: 'accountant@church.com', role: 'Accountant', color: 'bg-amber-500' },
+    { email: "admin@church.com", role: "Super Pastor", color: "bg-purple-500" },
+    { email: "pastor@church.com", role: "Pastor", color: "bg-blue-500" },
+    { email: "usher@church.com", role: "Usher", color: "bg-green-500" },
+    {
+      email: "accountant@church.com",
+      role: "Accountant",
+      color: "bg-amber-500",
+    },
   ];
 
   return (
@@ -59,13 +70,17 @@ export function LoginPage({ onSwitchToPublic }: LoginPageProps) {
             <Church className="h-10 w-10 text-primary" />
           </div>
           <h1 className="text-2xl font-bold">Church Management System</h1>
-          <p className="text-muted-foreground mt-2">Sign in to access the dashboard</p>
+          <p className="text-muted-foreground mt-2">
+            Sign in to access the dashboard
+          </p>
         </div>
 
         <Card className="border-2">
           <CardHeader>
             <CardTitle>Welcome Back</CardTitle>
-            <CardDescription>Enter your credentials to access your account</CardDescription>
+            <CardDescription>
+              Enter your credentials to access your account
+            </CardDescription>
           </CardHeader>
           <form onSubmit={handleLogin}>
             <CardContent className="space-y-4">
@@ -85,7 +100,7 @@ export function LoginPage({ onSwitchToPublic }: LoginPageProps) {
                 <div className="relative">
                   <Input
                     id="password"
-                    type={showPassword ? 'text' : 'password'}
+                    type={showPassword ? "text" : "password"}
                     placeholder="••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
@@ -98,7 +113,11 @@ export function LoginPage({ onSwitchToPublic }: LoginPageProps) {
                     className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
                     onClick={() => setShowPassword(!showPassword)}
                   >
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    {showPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
                   </Button>
                 </div>
               </div>
@@ -137,7 +156,9 @@ export function LoginPage({ onSwitchToPublic }: LoginPageProps) {
 
         {/* Demo Accounts */}
         <div className="mt-6">
-          <p className="text-sm text-center text-muted-foreground mb-3">Demo Accounts (Password: admin123)</p>
+          <p className="text-sm text-center text-muted-foreground mb-3">
+            Demo Accounts (Password: admin123)
+          </p>
           <div className="grid grid-cols-2 gap-2">
             {demoAccounts.map((account) => (
               <Button
@@ -147,10 +168,12 @@ export function LoginPage({ onSwitchToPublic }: LoginPageProps) {
                 className="justify-start text-xs"
                 onClick={() => {
                   setEmail(account.email);
-                  setPassword('admin123');
+                  setPassword("admin123");
                 }}
               >
-                <span className={`w-2 h-2 rounded-full ${account.color} mr-2`} />
+                <span
+                  className={`w-2 h-2 rounded-full ${account.color} mr-2`}
+                />
                 {account.role}
               </Button>
             ))}
