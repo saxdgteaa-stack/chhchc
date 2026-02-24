@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Bell, Search, Menu } from 'lucide-react';
-import { useAuthStore } from '@/store/auth';
-import { Badge } from '@/components/ui/badge';
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Bell, Search, Menu, LogOut } from "lucide-react";
+import { useAuthStore } from "@/store/auth";
+import { Badge } from "@/components/ui/badge";
 
 interface DashboardHeaderProps {
   onMenuClick: () => void;
@@ -12,7 +12,12 @@ interface DashboardHeaderProps {
 }
 
 export function DashboardHeader({ onMenuClick, title }: DashboardHeaderProps) {
-  const { user } = useAuthStore();
+  const { user, logout } = useAuthStore();
+
+  const handleLogout = () => {
+    logout();
+    window.location.href = "/";
+  };
 
   return (
     <header className="sticky top-0 z-30 h-16 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -30,16 +35,11 @@ export function DashboardHeader({ onMenuClick, title }: DashboardHeaderProps) {
         </div>
 
         <div className="flex items-center gap-4">
-          {/* Search */}
           <div className="hidden md:block relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search..."
-              className="w-64 pl-9"
-            />
+            <Input placeholder="Search..." className="w-64 pl-9" />
           </div>
 
-          {/* Notifications */}
           <Button variant="ghost" size="icon" className="relative">
             <Bell className="h-5 w-5" />
             <Badge className="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center text-xs">
@@ -47,11 +47,19 @@ export function DashboardHeader({ onMenuClick, title }: DashboardHeaderProps) {
             </Badge>
           </Button>
 
-          {/* User Greeting */}
           <div className="hidden sm:block text-right">
             <p className="text-sm font-medium">Welcome back,</p>
             <p className="text-xs text-muted-foreground">{user?.name}</p>
           </div>
+
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleLogout}
+            title="Logout"
+          >
+            <LogOut className="h-5 w-5" />
+          </Button>
         </div>
       </div>
     </header>
