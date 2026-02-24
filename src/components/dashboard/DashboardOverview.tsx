@@ -655,145 +655,164 @@ function UsherDashboard() {
   const today = new Date();
   const upcomingEvents = mockEvents
     .filter((e) => new Date(e.date) >= today)
-    .slice(0, 4);
+    .slice(0, 3);
+  const nextEvent = upcomingEvents[0];
+
+  const formatDate = (date: Date) => {
+    const todayStr = new Date().toDateString();
+    const tomorrowStr = new Date(today.getTime() + 86400000).toDateString();
+    const dateStr = date.toDateString();
+
+    if (dateStr === todayStr) return "Today";
+    if (dateStr === tomorrowStr) return "Tomorrow";
+    return date.toLocaleDateString("en-US", {
+      weekday: "short",
+      month: "short",
+      day: "numeric",
+    });
+  };
 
   return (
     <div className="space-y-6">
-      <Card className="bg-gradient-to-r from-green-500/10 to-green-500/5 border-2">
-        <CardContent className="p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-2xl font-bold">Usher Dashboard</h2>
-              <p className="text-muted-foreground mt-1">
-                Your assigned events and attendance
-              </p>
+      <div className="bg-gradient-to-r from-green-500 to-green-600 rounded-xl p-6 text-white">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-green-100 text-sm">Welcome back!</p>
+            <h1 className="text-2xl font-bold mt-1">Usher Dashboard</h1>
+            <p className="text-green-100 mt-2">
+              {today.toLocaleDateString("en-US", {
+                weekday: "long",
+                month: "long",
+                day: "numeric",
+                year: "numeric",
+              })}
+            </p>
+          </div>
+          <div className="p-4 bg-white/20 rounded-full">
+            <UserCheck className="h-10 w-10" />
+          </div>
+        </div>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2">
+        <Button
+          className="h-24 text-lg flex-col gap-2 bg-green-500 hover:bg-green-600"
+          onClick={() => (window.location.href = "/?view=dashboard")}
+        >
+          <UserCheck className="h-8 w-8" />
+          Mark Attendance
+        </Button>
+        <Button className="h-24 text-lg flex-col gap-2" variant="outline">
+          <Users className="h-8 w-8" />
+          Register Visitor
+        </Button>
+      </div>
+
+      {nextEvent && (
+        <Card className="border-2 border-green-200 bg-green-50/50 dark:bg-green-950/20">
+          <CardHeader className="pb-2">
+            <Badge className="w-fit bg-green-500">Next Event</Badge>
+          </CardHeader>
+          <CardContent>
+            <h3 className="text-xl font-bold">{nextEvent.title}</h3>
+            <div className="flex flex-wrap gap-4 mt-3 text-muted-foreground">
+              <div className="flex items-center gap-2">
+                <Calendar className="h-4 w-4" />
+                <span>{formatDate(new Date(nextEvent.date))}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Clock className="h-4 w-4" />
+                <span>
+                  {new Date(nextEvent.date).toLocaleTimeString("en-US", {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </span>
+              </div>
+              {nextEvent.location && (
+                <div className="flex items-center gap-2">
+                  <MapPin className="h-4 w-4" />
+                  <span>{nextEvent.location}</span>
+                </div>
+              )}
             </div>
-            <UserCheck className="h-12 w-12 text-green-500/50" />
+          </CardContent>
+        </Card>
+      )}
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Calendar className="h-5 w-5" />
+            Your Assigned Events
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            {upcomingEvents.length === 0 ? (
+              <p className="text-muted-foreground text-center py-4">
+                No upcoming events assigned
+              </p>
+            ) : (
+              upcomingEvents.map((event) => (
+                <div
+                  key={event.id}
+                  className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-muted/50 transition-colors"
+                >
+                  <div>
+                    <p className="font-medium">{event.title}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {formatDate(new Date(event.date))} at{" "}
+                      {new Date(event.date).toLocaleTimeString("en-US", {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </p>
+                  </div>
+                  <Badge
+                    variant={
+                      new Date(event.date).toDateString() ===
+                      today.toDateString()
+                        ? "default"
+                        : "secondary"
+                    }
+                  >
+                    {new Date(event.date).toDateString() ===
+                    today.toDateString()
+                      ? "Today"
+                      : "Upcoming"}
+                  </Badge>
+                </div>
+              ))
+            )}
           </div>
         </CardContent>
       </Card>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-3">
         <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div className="p-2 rounded-lg bg-green-500/10">
-                <Calendar className="h-5 w-5 text-green-500" />
-              </div>
-            </div>
-            <div className="mt-4">
-              <p className="text-2xl font-bold">{upcomingEvents.length}</p>
-              <p className="text-sm text-muted-foreground">Assigned Events</p>
-            </div>
+          <CardContent className="p-4 text-center">
+            <p className="text-3xl font-bold text-green-500">
+              {mockDashboardStats.weeklyAttendance}
+            </p>
+            <p className="text-sm text-muted-foreground">This Week</p>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div className="p-2 rounded-lg bg-blue-500/10">
-                <Users className="h-5 w-5 text-blue-500" />
-              </div>
-            </div>
-            <div className="mt-4">
-              <p className="text-2xl font-bold">
-                {mockDashboardStats.weeklyAttendance}
-              </p>
-              <p className="text-sm text-muted-foreground">Weekly Attendance</p>
-            </div>
+          <CardContent className="p-4 text-center">
+            <p className="text-3xl font-bold text-blue-500">2</p>
+            <p className="text-sm text-muted-foreground">Visitors Today</p>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div className="p-2 rounded-lg bg-purple-500/10">
-                <UserCheck className="h-5 w-5 text-purple-500" />
-              </div>
-            </div>
-            <div className="mt-4">
-              <p className="text-2xl font-bold">2</p>
-              <p className="text-sm text-muted-foreground">Visitors Today</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div className="p-2 rounded-lg bg-amber-500/10">
-                <Clock className="h-5 w-5 text-amber-500" />
-              </div>
-            </div>
-            <div className="mt-4">
-              <p className="text-2xl font-bold">1</p>
-              <p className="text-sm text-muted-foreground">Next Event</p>
-            </div>
+          <CardContent className="p-4 text-center">
+            <p className="text-3xl font-bold text-purple-500">
+              {upcomingEvents.length}
+            </p>
+            <p className="text-sm text-muted-foreground">Assigned Events</p>
           </CardContent>
         </Card>
       </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Your Assigned Events</CardTitle>
-          <CardDescription>Events you are assigned to usher</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-4 md:grid-cols-2">
-            {upcomingEvents.map((event) => (
-              <div
-                key={event.id}
-                className="flex items-start gap-3 p-4 rounded-lg border"
-              >
-                <div className="p-2 rounded-lg bg-primary/10">
-                  <Calendar className="h-5 w-5 text-primary" />
-                </div>
-                <div className="flex-1">
-                  <p className="font-medium">{event.title}</p>
-                  <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground">
-                    <Clock className="h-3 w-3" />
-                    {new Date(event.date).toLocaleDateString("en-US", {
-                      weekday: "short",
-                      month: "short",
-                      day: "numeric",
-                    })}
-                    {" at "}
-                    {new Date(event.date).toLocaleTimeString("en-US", {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
-                  </div>
-                  {event.location && (
-                    <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground">
-                      <MapPin className="h-3 w-3" />
-                      {event.location}
-                    </div>
-                  )}
-                  <Button size="sm" className="mt-3">
-                    <UserCheck className="mr-2 h-4 w-4" />
-                    Mark Attendance
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Quick Actions</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-4 md:grid-cols-2">
-            <Button className="h-20 flex-col gap-2" variant="outline">
-              <UserCheck className="h-6 w-6" />
-              <span>Mark Attendance</span>
-            </Button>
-            <Button className="h-20 flex-col gap-2" variant="outline">
-              <Users className="h-6 w-6" />
-              <span>Register Visitor</span>
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 }
